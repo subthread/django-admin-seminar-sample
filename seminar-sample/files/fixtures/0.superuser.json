@@ -1,0 +1,24 @@
+[
+  {
+    "model": "user.serviceuser",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$Fh6tcifc1WdCzUilitr6p8$qSgB8IgdX6MvoiQ54OwQWWN06p7Qep4iOWoXvsG/jvg=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00+0900",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

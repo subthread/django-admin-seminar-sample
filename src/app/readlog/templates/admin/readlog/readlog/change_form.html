@@ -1,0 +1,21 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}{{ block.super }}
+    <script>
+        window.addEventListener('load', () => {
+            // 文字色、背景色を編集したとき感想フィールドに反映する
+            const $impression = document.getElementById('id_impression');
+            const $text_color = document.getElementById('id_text_color');
+            const $background_color = document.getElementById('id_background_color');
+            if ($impression) {
+                const updateColor = () => {
+                    $impression.style.backgroundColor = $background_color?.value ?? '#FFF';
+                    $impression.style.color = $text_color?.value ?? '#000';
+                };
+                updateColor();
+                $text_color?.addEventListener('input', updateColor);
+                $background_color?.addEventListener('input', updateColor);
+            }
+        });
+    </script>
+{% endblock %}

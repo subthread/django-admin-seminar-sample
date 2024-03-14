@@ -1,0 +1,22 @@
+name: Check format
+on:
+  pull_request:
+
+jobs:
+  black:
+    name: Check black
+    uses: ./.github/workflows/setup.yml
+    with:
+      poetry-command: "black --check --quiet"
+
+  isort:
+    name: Check isort
+    uses: ./.github/workflows/setup.yml
+    with:
+      poetry-command: "isort --check --quiet"
+
+  flake8:
+    name: Check flake8
+    uses: ./.github/workflows/setup.yml
+    with:
+      poetry-command: "pflake8"

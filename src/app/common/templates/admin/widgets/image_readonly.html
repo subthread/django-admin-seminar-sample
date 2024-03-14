@@ -1,0 +1,6 @@
+<div class={{ widget.class }}>
+{% if widget.is_initial %}
+    <img src="{{ widget.value.url }}" alt="{{ widget.value }}" />
+    <p class="file-upload"><a href="{{ widget.value.url }}">{{ widget.value }}</a></p>
+{% endif %}
+</div>

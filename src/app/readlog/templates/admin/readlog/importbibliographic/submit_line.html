@@ -1,0 +1,22 @@
+<div class="submit-row">
+    {% if change %}
+        {% if original.status|stringformat:"s" == "preview" %}
+            <input type="submit" value="インポート実行" class="default" name="_continue">
+        {% endif %}
+
+        <input type="submit" value="備考保存" name="_save">
+
+        <a href="{% url "admin:readlog_importbibliographic_add" %}" class="closelink"
+           style="background: var(--button-bg); margin-left: auto">
+            新しくインポート
+        </a>
+
+        {% if original.status|stringformat:"s" == "preview" %}
+            <input type="submit" value="キャンセル" style="background: #CC3434" name="_cancel">
+        {% endif %}
+
+    {% else %}
+        <input type="submit" value="プレビューする" class="default" name="_continue">
+        <div class="import-guide">※別のプレビューは自動的にキャンセルされます</div>
+    {% endif %}
+</div>

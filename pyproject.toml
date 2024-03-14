@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "seminar-sample"
+version = "0.1.0"
+description = ""
+authors = ["たまみ <tama@subthread.co.jp>"]
+license = "UNLICENSED"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^5.0.1"
+psycopg = "^3.1.17"
+redis = "^5.0.1"
+boto3 = "^1.34.23"
+django-storages = "^1.14.2"
+google-api-python-client = "^2.121.0"
+pillow = "^10.2.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
+isort = "^5.13.2"
+pyproject-flake8 = "^6.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 119
+
+[tool.isort]
+profile = "black"
+line_length = 119
+
+[tool.flake8]
+max-line-length = 119
+extend-ignore = [
+    "E203", # ":"の前の空白を入れないルール
+    "W503", # 演算子の前に改行しないようにするルール
+    "E501", # black かけても line too long になるところはしかたない
+    "W291", # black かけても trailing whitespace になるのはおそらく文字列のなか
+    "E722", # エラーはすべて補足したい
+]
+exclude = [
+    "__pycache__",
+    "migrations",
+]
+per-file-ignores = [
+    '*/__init__.py:F401,F403',
+    'src/project/settings/docker.py,src/project/settings/ecs.py:F401,F403,F405',
+]

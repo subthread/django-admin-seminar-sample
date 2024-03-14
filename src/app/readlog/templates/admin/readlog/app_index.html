@@ -1,0 +1,16 @@
+{% extends "admin/app_index.html" %}
+
+{% block content %}
+    {{ block.super }}
+
+    <ul>
+        <li>読んだ本の感想を書き留めていく app です</li>
+        <li>
+            [<a href="{% url "admin:readlog_bibliographic_changelist" %}">書誌管理</a>] で本の情報を登録して、
+            [<a href="{% url "admin:readlog_readlog_add" %}">読書ログを追加</a>] してください
+        </li>
+        <li>
+            書誌情報のエクスポートや [<a href="{% url "admin:readlog_importbibliographic_add" %}">インポート</a>] ができます
+        </li>
+    </ul>
+{% endblock %}

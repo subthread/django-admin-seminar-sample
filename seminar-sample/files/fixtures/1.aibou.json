@@ -1,0 +1,206 @@
+[
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "監察官室",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+      "name": "刑事部",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": {
+      "name": "特命係",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 4,
+    "fields": {
+      "name": "警察官",
+      "permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 3,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ramune",
+      "first_name": "",
+      "last_name": "大河内",
+      "email": "haruki.okochi@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2003-10-07T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/ramune.png",
+      "groups": [
+        1,
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 4,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "sweets",
+      "first_name": "",
+      "last_name": "芹沢",
+      "email": "keiji.serizawa@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2003-10-07T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/sweets.png",
+      "groups": [
+        2,
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 5,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "leon",
+      "first_name": "",
+      "last_name": "出雲",
+      "email": "leon.izumo@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2020-10-13T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/leon.png",
+      "groups": [
+        2,
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 6,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ukyo",
+      "first_name": "",
+      "last_name": "杉下",
+      "email": "ukyo.sugishita@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2000-06-02T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/ukyo.png",
+      "groups": [
+        3,
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 7,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "itamin",
+      "first_name": "",
+      "last_name": "伊丹",
+      "email": "kenichi.itami@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2000-06-02T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/itamin.png",
+      "groups": [
+        2,
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 8,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "miura",
+      "first_name": "",
+      "last_name": "三浦",
+      "email": "shinsuke.miura@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2001-01-25T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/miura.png",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "user.serviceuser",
+    "pk": 9,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "kame",
+      "first_name": "",
+      "last_name": "亀山",
+      "email": "kaoru.kameyama@aibou.example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2000-06-02T15:00:00Z",
+      "nickname": null,
+      "google_id": null,
+      "google_icon_url": null,
+      "icon": "icon/kame.png",
+      "groups": [
+        3,
+        4
+      ],
+      "user_permissions": []
+    }
+  }
+]

@@ -1,0 +1,4 @@
+/.env
+/files/local.py
+/files/fixtures/*.loaded
+/files/init-localstack/init-files/
