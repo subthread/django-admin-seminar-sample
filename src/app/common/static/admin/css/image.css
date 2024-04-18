@@ -1,0 +1,23 @@
+.picture-preview,
+.icon-preview {
+    display: flex;
+}
+
+.picture-preview img {
+    max-height: 15em;
+    margin-right: 1em;
+    object-fit: contain;
+}
+
+.icon-preview img {
+    max-height: 4em;
+    margin-right: 1em;
+    object-fit: contain;
+}
+
+.popup-image-preview img {
+    display: block;
+    min-width: 640px;
+    max-height: 480px;
+    object-fit: contain;
+}
