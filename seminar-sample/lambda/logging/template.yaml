@@ -1,0 +1,283 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: logging-app
+
+
+Parameters:
+  ProjectName:
+    Type: String
+  DatabaseHost:
+    Type: AWS::SSM::Parameter::Value<String>
+  DatabaseName:
+    Type: AWS::SSM::Parameter::Value<String>
+  SecretName:
+    Type: String
+
+  VPCSecurityGroupIds:
+    Type: List<String>
+  VPCSubnetIds:
+    Type: List<String>
+
+Mappings:
+  ApiLog:
+    LogLevel:
+      prd: ERROR
+      stg: ERROR
+      dev: INFO
+  Function:
+    ConcurrentExecutionCount:
+      prd: 300
+      stg: 100
+      dev: 100
+
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Environment:
+      Variables:
+        DATABASE_HOST: !Ref DatabaseHost
+        DATABASE_NAME: !Ref DatabaseName
+        SECRET_NAME: !Ref SecretName
+    VpcConfig:
+      SecurityGroupIds: !Ref VPCSecurityGroupIds
+      SubnetIds: !Ref VPCSubnetIds
+
+
+Resources:
+  ##### IAM #####
+
+  LoggingApiInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${ProjectName}-logging-api-invoke-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !GetAtt LoggingFunction.Arn
+
+  LoggingApiQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${ProjectName}-logging-api-sqs-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt LoggingQueue.Arn
+              - !GetAtt LoggingDeadLetterQueue.Arn
+
+  LoggingApiLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${ProjectName}-logging-api-lambda-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - "arn:aws:secretsmanager:*:*:secret:*"
+
+  LoggingApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-logging-api-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - !Ref LoggingApiInvokePolicy
+        - !Ref LoggingApiQueuePolicy
+
+  LoggingFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-logging-function-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref LoggingApiLambdaPolicy
+
+
+  ##### API Gateway #####
+
+  ApiGatewayAccountSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt LoggingApiRole.Arn
+
+  LoggingApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "${ProjectName}-logging-api"
+
+  LoggingApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: LoggingApiActionMethod
+    Properties:
+      RestApiId: !Ref LoggingApi
+      StageName: Prod
+      #StageDescription:    # localstack が非対応ぽい
+      #  DataTraceEnabled: true
+      #  LoggingLevel: !FindInMap [ ApiLog, LogLevel, !Ref TargetEnvironment ]
+      #  MetricsEnabled: true
+
+  # /api
+  LoggingApiResourceApiPart:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LoggingApi
+      PathPart: api
+      ParentId: !GetAtt LoggingApi.RootResourceId
+  # /api/logging
+  LoggingApiResourceLoggingPart:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LoggingApi
+      PathPart: logging
+      ParentId: !Ref LoggingApiResourceApiPart
+  # /api/logging/queue
+  LoggingApiResourceQueuePart:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LoggingApi
+      PathPart: queue
+      ParentId: !Ref LoggingApiResourceLoggingPart
+  # /api/logging/post
+  LoggingApiResourcePostPart:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LoggingApi
+      PathPart: post
+      ParentId: !Ref LoggingApiResourceLoggingPart
+
+  # POST メソッド
+  LoggingApiActionMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      RestApiId: !Ref LoggingApi
+      ResourceId: !Ref LoggingApiResourceQueuePart
+      AuthorizationType: NONE
+      MethodResponses:
+        - StatusCode: '200'
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${queueName}"
+          - queueName: !GetAtt LoggingQueue.QueueName
+        Credentials: !GetAtt LoggingApiRole.Arn
+        IntegrationResponses:
+          - StatusCode: '200'
+            ResponseTemplates:
+              application/json: '{"result":"queuing"}'
+        RequestTemplates:
+          # https://docs.aws.amazon.com/ja_jp/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+          application/json: 'Action=SendMessage&MessageBody={
+            "body": "$util.urlEncode($util.escapeJavaScript($input.body))",
+            "headers": {
+              #set($header = $input.params().header)
+              #foreach($param in $header.keySet())
+              "$param": "$util.urlEncode($util.escapeJavaScript($header.get($param)))"
+              #if($foreach.hasNext),#end
+              #end
+            }
+          }'
+        RequestParameters:
+          integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+
+  LoggingApiInitMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      RestApiId: !Ref LoggingApi
+      ResourceId: !Ref LoggingApiResourcePostPart
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LoggingFunction}/invocations"
+        Credentials: !GetAtt LoggingApiRole.Arn
+    DependsOn: LambdaPermission
+
+
+  ##### SQS #####
+
+  LoggingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${ProjectName}-logging-dlq"
+      MessageRetentionPeriod: 1209600
+
+  LoggingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${ProjectName}-logging-queue"
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 30
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt LoggingDeadLetterQueue.Arn
+        maxReceiveCount: 2
+
+
+  ##### Lambda #####
+
+  LoggingFunction:
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: python3.11
+      Architectures:
+        - x86_64
+      Role: !GetAtt LoggingFunctionRole.Arn
+      #ReservedConcurrentExecutions: !FindInMap [ Function, ConcurrentExecutionCount, !Ref TargetEnvironment ]
+      Events:
+        LoggingQueue:
+          # https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#sqs
+          Type: SQS
+          Properties:
+            Queue: !GetAtt LoggingQueue.Arn
+            BatchSize: 10
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LoggingFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+Outputs:
+  RestApiId:
+    Value: !Sub "${LoggingApi}"

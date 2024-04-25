@@ -1,4 +1,5 @@
 /.env
 /files/local.py
+/files/proxy.conf
 /files/fixtures/*.loaded
 /files/init-localstack/init-files/

@@ -39,8 +39,8 @@ down:
 
 ### setup ###
 
-.PHONY: setup initialize setup-groups
-setup: files/local.py .env
+.PHONY: setup initialize setup-groups prepare-file
+setup: files/local.py files/proxy.conf .env
 
 initialize: setup clean up update \
 	$(patsubst %.json,%.loaded,$(sort $(wildcard ${FIXTURES_PATH}/*.json))) \
@@ -49,33 +49,85 @@ initialize: setup clean up update \
 setup-groups:
 	docker compose exec server python src/manage.py setupgroups
 
-# files/local.py が無いか、files/local.default.py が更新されていたとき
-files/local.py: files/local.default.py
-	@if test ! -f $@; then cp $< $@; echo "$@ created"; fi
-	@if test $< -nt $@; then echo "$< が更新されています！ $@ を削除するか編集してください"; exit 1; fi
+prepare-file:
+	@# ${target} が無ければ作る、${source} が更新されていたらエラーする
+	@if test ! -f ${target}; then cp ${source} ${target}; echo "${target} created"; fi
+	@if test ${source} -nt ${target}; then echo "${source} が更新されています！ ${target} を削除するか編集してください"; exit 1; fi
+
+files/local.py: files/default.local.py
+	@make prepare-file "source=$<" "target=$@"
+
+files/proxy.conf: files/default.proxy.conf
+	@make prepare-file "source=$<" "target=$@"
 
 .env: default.env
-	@if test ! -f $@; then cp $< $@; echo "$@ created"; fi
-	@if test $< -nt $@; then echo "$< が更新されています！ $@ を削除するか編集してください"; exit 1; fi
+	@make prepare-file "source=$<" "target=$@"
 
 %.loaded: %.json
 	docker compose exec -T server python src/manage.py loaddata --format json - < $<
 	@touch $@
 
 
+### Lambda ###
+
+.PHONY: deploy-lambda deploy-logging-lambda deploy-mail-lambda lambda-log
+
+deploy-lambda: deploy-logging-lambda deploy-mail-lambda
+
+deploy-logging-lambda:
+	@docker compose exec -w /lambda/logging localstack make deploy
+	@make update-proxy
+
+deploy-mail-lambda:
+	@docker compose exec -w /lambda/recvmail localstack make deploy
+
+recvmail:
+	$(eval message_id := $(shell echo "test-mail-`date '+%s'`"))
+	@if test "${target}" == ""; then echo "メールファイルを指定してください target=***"; exit 1; fi
+	@if test ! -f "${target}"; then echo "メールファイル ${target} が見つかりません"; exit 1; fi
+	@cp "${target}" ./lambda/${message_id}; \
+		docker compose exec localstack aws s3 cp /lambda/${message_id} s3://import-bucket/; \
+		rm ./lambda/${message_id}
+	$(eval function_name := $(shell docker compose exec localstack \
+		aws lambda list-functions --query 'Functions[?contains(FunctionName, `RecvMail`)].FunctionName' --output text))
+	@# https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-lambda-event.html
+	@docker compose exec localstack \
+		aws lambda invoke /dev/stdout \
+		--function-name "${function_name}" \
+		--payload '{"Records": [{"ses":{"mail":{"messageId":"${message_id}"}}}]}'
+
+lambda-log:
+	$(eval log_group       := $(shell docker compose exec localstack aws logs describe-log-groups --output text --query 'logGroups[0].logGroupName'))
+	$(eval log_stream_name := `docker compose exec localstack aws logs describe-log-streams --log-group-name '${log_group}' --order-by LastEventTime --output text --query 'logStreams[-1].logStreamName'`)
+	@docker compose exec localstack aws logs get-log-events --log-group-name '${log_group}' --log-stream-name ${log_stream_name} --output text --query 'events[].[message]'
+
+
 ### update系 ###
 
-.PHONY: update update-postgres update-server update-redis
+.PHONY: update update-postgres update-redis update-localstack update-server update-proxy
 
-update: update-postgres update-server update-redis
+update: update-postgres update-redis update-localstack update-server
 
 update-postgres:
 	docker compose exec server python src/manage.py migrate --database=default
 
+update-redis:
+
+update-localstack:
+
 update-server:
 	docker compose exec server python src/manage.py collectstatic --no-input
 
-update-redis:
+update-proxy:
+	@# proxy.conf を書き換えて API Gateway にリクエストを送るようにする
+	$(eval api_id := $(shell docker compose exec localstack aws apigateway get-rest-apis --query 'items[0].id' --output text))
+	$(eval stage_name := $(shell docker compose exec localstack aws apigateway get-stages --rest-api-id ${api_id} --query 'item[0].stageName' --output text))
+	@if test "${stage_name}" != ""; then \
+		sed -i "" -e 's/set $$api_id .*/set $$api_id ${api_id};/' files/proxy.conf ;\
+		sed -i "" -e 's/set $$stage_name .*/set $$stage_name ${stage_name};/' files/proxy.conf ;\
+		docker compose restart proxy ;\
+	fi
+	@#docker compose exec proxy service nginx restart
 
 
 ### clean系 ###
@@ -83,7 +135,7 @@ update-redis:
 .PHONY: full-clean clean clean-postgres clean-redis clean-localstack clean-server
 
 full-clean: clean
-	-@rm -f .env files/local.py
+	-@rm -f .env files/local.py files/proxy.conf
 
 clean: down clean-postgres clean-redis clean-localstack clean-server
 	-@rm -f ${FIXTURES_PATH}/*.loaded
@@ -97,6 +149,9 @@ clean-redis:
 	@if test "${session_volume}" != ""; then docker volume rm ${session_volume}; fi
 
 clean-localstack:
+	$(eval localstack_image = $(shell docker image ls | grep -i "${APP_NAME}[_-]localstack" | awk '{print $$1}'))
+	@if test "${localstack_image}" != ""; then docker image rm ${localstack_image}; fi
+	-@rm -rf lambda/.aws-sam
 
 clean-server:
 	$(eval server_image = $(shell docker image ls | grep -i "${APP_NAME}[_-]server" | awk '{print $$1}'))
@@ -107,13 +162,13 @@ clean-server:
 
 .PHONY: shell dbshell localstack makemigrations backup
 
-shell:
+shell:		# Django management shell を開く
 	docker compose exec server python src/manage.py shell
 
-dbshell:
-	docker compose exec postgres psql -U postgres application_db
+dbshell:	# postgres の psql に接続する
+	docker compose exec postgres sh -c "PGPASSWORD=\$$POSTGRES_PASSWORD psql -U postgres application_db"
 
-localstack:
+localstack:	# localstack の bash に接続する
 	docker compose exec localstack bash
 
 makemigrations:

@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: recv-mail
+
+
+Parameters:
+  ProjectName:
+    Type: String
+  EMailHost:
+    Type: AWS::SSM::Parameter::Value<String>
+  EMailPort:
+    Type: AWS::SSM::Parameter::Value<String>
+  EMailFrom:
+    Type: AWS::SSM::Parameter::Value<String>
+  S3Bucket:
+    Type: AWS::SSM::Parameter::Value<String>
+  SecretName:
+    Type: String
+
+  VPCSecurityGroupIds:
+    Type: List<String>
+  VPCSubnetIds:
+    Type: List<String>
+
+Mappings:
+  ApiLog:
+    LogLevel:
+      prd: ERROR
+      stg: ERROR
+      dev: INFO
+  Function:
+    ConcurrentExecutionCount:
+      prd: 300
+      stg: 100
+      dev: 100
+
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Environment:
+      Variables:
+        EMAIL_HOST: !Ref EMailHost
+        EMAIL_PORT: !Ref EMailPort
+        EMAIL_FROM: !Ref EMailFrom
+        S3_BUCKET: !Ref S3Bucket
+        SECRET_NAME: !Ref SecretName
+    VpcConfig:
+      SecurityGroupIds: !Ref VPCSecurityGroupIds
+      SubnetIds: !Ref VPCSubnetIds
+
+
+Resources:
+  ##### IAM #####
+
+  RecvMailApiInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${ProjectName}-recv-mail-invoke-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !GetAtt RecvMailFunction.Arn
+
+  RecvMailApiLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${ProjectName}-recv-mail-lambda-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - "arn:aws:s3:::*/*"
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - "arn:aws:secretsmanager:*:*:secret:*"
+
+  RecvMailApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-recv-mail-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - !Ref RecvMailApiInvokePolicy
+
+  RecvMailFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-recv-mail-function-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref RecvMailApiLambdaPolicy
+
+
+  ##### Lambda #####
+
+  RecvMailFunction:
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: python3.11
+      Architectures:
+        - x86_64
+      Role: !GetAtt RecvMailFunctionRole.Arn
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RecvMailFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
