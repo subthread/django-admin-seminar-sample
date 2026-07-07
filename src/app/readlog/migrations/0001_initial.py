@@ -17,7 +17,9 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新日時")),
                 ("name", models.CharField(verbose_name="名前")),
@@ -35,7 +37,9 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新日時")),
                 ("name", models.CharField(verbose_name="名前")),
@@ -53,7 +57,9 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新日時")),
                 ("title", models.CharField(verbose_name="タイトル")),

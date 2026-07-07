@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
                 (
                     "archive_period",
                     models.CharField(
-                        choices=[("weekly", "週次"), ("monthly", "月次"), ("annual", "年次")], verbose_name="アーカイブ期間"
+                        choices=[("weekly", "週次"), ("monthly", "月次"), ("annual", "年次")],
+                        verbose_name="アーカイブ期間",
                     ),
                 ),
                 ("start_period", models.DateField(verbose_name="対象期間：開始日")),

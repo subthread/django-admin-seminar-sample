@@ -41,7 +41,9 @@ class ActivityDetail(models.Model):
         db_table = "activity"
         verbose_name = verbose_name_plural = "運動"
 
-    summary = models.ForeignKey(ActivitySummary, on_delete=models.CASCADE, related_name="details", verbose_name="ユーザー")
+    summary = models.ForeignKey(
+        ActivitySummary, on_delete=models.CASCADE, related_name="details", verbose_name="ユーザー"
+    )
 
     activity = models.CharField("運動内容")
     minutes = models.IntegerField("運動時間", null=True, blank=True)

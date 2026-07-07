@@ -21,12 +21,17 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 (
                     "created_at",
-                    models.DateTimeField(default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"),
+                    models.DateTimeField(
+                        default=django.utils.timezone.localtime, editable=False, verbose_name="登録日時"
+                    ),
                 ),
                 ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新日時")),
                 ("read_at", models.DateField(default=django.utils.timezone.localdate, verbose_name="読了日")),
                 ("impression", models.TextField(blank=True, null=True, verbose_name="感想")),
-                ("text_color", app.common.fields.color.ColorField(blank=True, default="#000000", verbose_name="文字色")),
+                (
+                    "text_color",
+                    app.common.fields.color.ColorField(blank=True, default="#000000", verbose_name="文字色"),
+                ),
                 (
                     "background_color",
                     app.common.fields.color.ColorField(blank=True, default="#ffffff", verbose_name="背景色"),
@@ -40,7 +45,9 @@ class Migration(migrations.Migration):
                 (
                     "user",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name="ユーザー"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="ユーザー",
                     ),
                 ),
             ],

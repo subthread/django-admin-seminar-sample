@@ -24,8 +24,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        start_date = options["start"]  # type:date
-        end_date = options["end"]  # type:date
+        start_date = options["start"]  # type: date
+        end_date = options["end"]  # type: date
 
         user_data = [
             # username, step_range, gym_rate, dental_rate, morning_rate, snack_rate, start, end

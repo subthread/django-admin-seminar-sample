@@ -102,6 +102,11 @@ else:
             "HOST": os.getenv("REPLICA_DATABASE_HOST"),
         }
 
+    DATABASE_ROUTERS = [
+        "project.router.ReplicaRouter",
+        "project.router.DefaultRouter",
+    ]
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -175,6 +180,13 @@ LOGGING = {
         },
     },
 }
+
+# メールサーバー情報
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_FROM")
 
 # 環境情報 docker / develop / accept / production
 ENVIRONMENT = os.getenv("ENVIRONMENT") or "local"

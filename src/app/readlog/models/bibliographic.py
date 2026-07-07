@@ -63,7 +63,7 @@ class Bibliographic(models.Model):
     publisher = models.ForeignKey(Publisher, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="出版社")
     published_at = models.DateField("発行日", null=True, blank=True)
 
-    picture = ImageFileField(  # type:models.FileField
+    picture = ImageFileField(  # type: models.FileField
         "書影",
         storage=storages["resource"],
         upload_to=upload_to,

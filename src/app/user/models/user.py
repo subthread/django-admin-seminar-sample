@@ -36,7 +36,7 @@ class ServiceUser(AbstractUser):
 
     google_id = models.CharField("GoogleユーザーID", null=True, blank=True)
     google_icon_url = models.URLField("GoogleアイコンURL", null=True, blank=True)
-    icon = ImageFileField(  # type:models.FileField
+    icon = ImageFileField(  # type: models.FileField
         "アイコン",
         storage=storages["resource"],
         upload_to=upload_to,

@@ -65,7 +65,9 @@ class GoogleAuthView(View):
             # メールアドレスが一致するユーザー ⇒ Google ID を紐づける
             if user.google_id:
                 raise PermissionDenied  # 異なる Google ID に紐づいている
-            user.google_id = google_id  # このあと google_icon_url 更新時か update_last_login() で save してもらえるはず
+            user.google_id = (
+                google_id  # このあと google_icon_url 更新時か update_last_login() で save してもらえるはず
+            )
             user.add_group(settings.GOOGLE_USER_GROUP_NAME)  # Googleログインユーザー
         else:
             # ユーザーがいない ⇒ 作る

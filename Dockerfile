@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.14
 
 # 環境変数
 ENV APP_PATH /opt/apps/server

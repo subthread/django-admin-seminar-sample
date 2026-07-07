@@ -23,7 +23,10 @@ class Migration(migrations.Migration):
                 (
                     "gymnastics",
                     models.CharField(
-                        blank=True, choices=[("done", "した"), ("not", "しなかった")], null=True, verbose_name="アクティブ体操"
+                        blank=True,
+                        choices=[("done", "した"), ("not", "しなかった")],
+                        null=True,
+                        verbose_name="アクティブ体操",
                     ),
                 ),
                 (
@@ -35,20 +38,28 @@ class Migration(migrations.Migration):
                 (
                     "morning",
                     models.CharField(
-                        blank=True, choices=[("eat", "食べた"), ("not", "食べなかった")], null=True, verbose_name="朝食"
+                        blank=True,
+                        choices=[("eat", "食べた"), ("not", "食べなかった")],
+                        null=True,
+                        verbose_name="朝食",
                     ),
                 ),
                 (
                     "snack",
                     models.CharField(
-                        blank=True, choices=[("eat", "食べた"), ("not", "食べなかった")], null=True, verbose_name="間食"
+                        blank=True,
+                        choices=[("eat", "食べた"), ("not", "食べなかった")],
+                        null=True,
+                        verbose_name="間食",
                     ),
                 ),
                 ("note", models.TextField(blank=True, null=True, verbose_name="メモ")),
                 (
                     "user",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name="ユーザー"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="ユーザー",
                     ),
                 ),
             ],

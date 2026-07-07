@@ -32,7 +32,7 @@ class ExportBibliographicView(View):
             dest.write(
                 format_csv(("title", "publisher", "authors", "published_at", "cover", "sample"), encoding="utf-8-sig")
             )
-            for record in queryset.iterator(chunk_size=1000):  # type:Bibliographic
+            for record in queryset.iterator(chunk_size=1000):  # type: Bibliographic
                 dest.write(self.to_csv(record))
                 if record.picture:
                     filelist.append(record.picture)

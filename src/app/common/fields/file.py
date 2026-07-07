@@ -21,7 +21,9 @@ class ImageFileField(models.ImageField):
         if max_file_size is not None:
             kwargs.setdefault("validators", []).append(MaxFileSizeValueValidator(max_file_size))
             if "help_text" not in kwargs:
-                kwargs["help_text"] = f"{filesizeformat(max_file_size)}以内の画像ファイル（PNG/JPEG）を指定してください。"
+                kwargs["help_text"] = (
+                    f"{filesizeformat(max_file_size)}以内の画像ファイル（PNG/JPEG）を指定してください。"
+                )
         super().__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):

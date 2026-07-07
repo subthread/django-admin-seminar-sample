@@ -74,7 +74,7 @@ class BibliographicImporter:
 
     def load_csv(self) -> csv.DictReader:
         dict_reader = None
-        filename = self.record.file.name  # type:str
+        filename = self.record.file.name  # type: str
         if filename.lower().endswith(".csv"):
             # CSVファイルアップロード時
             dict_reader = self.open_csv(self.record.file.read())

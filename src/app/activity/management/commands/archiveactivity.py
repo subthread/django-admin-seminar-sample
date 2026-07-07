@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
         @classmethod
         def create(cls, options):
-            start_date = end_date = options["date"] or timezone.localdate()  # type:date
+            start_date = end_date = options["date"] or timezone.localdate()  # type: date
             period = options["period"]
             if period == ArchivePeriod.WEEKLY:
                 start_date -= timedelta(days=start_date.weekday())
