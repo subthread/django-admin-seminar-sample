@@ -29,9 +29,7 @@ services:
 
   # S3
   localstack:
-    build:
-      context: .
-      dockerfile: localstack.dockerfile
+    image: localstack/localstack:3
     #ports:
     #  - "4566:4566"    # sam や awslocal 等CLIでホストから操作する場合はポートを開ける必要がある
     volumes:
